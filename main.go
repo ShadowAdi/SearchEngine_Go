@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"search_engine/routes"
 	"syscall"
 	"time"
 
@@ -16,12 +17,13 @@ import (
 func main() {
 	env := godotenv.Load()
 	if env != nil {
-		panic("Cannot Find Environment Variables")
+		panic("cannot find environment variables")
 	}
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = ":4000"
+	} else {
+		port = ":" + port
 	}
 
 	app := fiber.New(fiber.Config{
@@ -30,17 +32,19 @@ func main() {
 
 	app.Use(compress.New())
 
+	routes.SetRoutes(app)
+
+	// Start our server and listen for a shutdown
 	go func() {
 		if err := app.Listen(port); err != nil {
-			log.Panic("ERROR Happend ", err)
+			log.Panic(err)
 		}
 	}()
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-	<-c
+	<-c // Block the main thread until interupted
 	app.Shutdown()
-	fmt.Println("Shutting Down The Server")
-
+	fmt.Println("shutting down server")
 }
