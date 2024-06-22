@@ -1,7 +1,8 @@
 package routes
 
 import (
-	"search_engine/views"
+	"fmt"
+	"search_engine/db"
 
 	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
@@ -17,7 +18,15 @@ func render(c *fiber.Ctx, component templ.Component, options ...func(*templ.Comp
 }
 
 func SetRoutes(app *fiber.App) {
-	app.Get("/", func(c *fiber.Ctx) error {
-		return render(c, views.Home())
+	fmt.Println("Connectoion strarted")
+	app.Get("/", AuthMiddlewar, DashboardHandler)
+	app.Post("/", AuthMiddlewar, DashboardPostHandler)
+	app.Get("/Login", LoginHandler)
+	app.Post("/login", LoginPostHandler)
+	app.Get("/User", func(c *fiber.Ctx) error {
+		u := &db.User{}
+		u.CreateAdmin()
+		return c.SendString("User Created")
 	})
+
 }

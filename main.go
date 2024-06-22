@@ -5,7 +5,9 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"search_engine/db"
 	"search_engine/routes"
+	"search_engine/utils"
 	"syscall"
 	"time"
 
@@ -25,16 +27,25 @@ func main() {
 	} else {
 		port = ":" + port
 	}
+	dbUrl := os.Getenv("DATABASE_URL")
+	if dbUrl == "" {
+		panic("DATABASE_URL is not set")
+	}
+
+	secretKey := os.Getenv("SECRET_KEY")
+	if secretKey == "" {
+		panic("SECRET_KEY is not set")
+	}
 
 	app := fiber.New(fiber.Config{
 		IdleTimeout: 5 * time.Second,
 	})
 
 	app.Use(compress.New())
-
+	db.InitDB()
 	routes.SetRoutes(app)
+	utils.StartCronJobs()
 
-	// Start our server and listen for a shutdown
 	go func() {
 		if err := app.Listen(port); err != nil {
 			log.Panic(err)
